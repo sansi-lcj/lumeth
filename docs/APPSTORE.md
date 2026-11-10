@@ -24,8 +24,10 @@ No profiles for 'com.sansi.lumeth' were found
 ```
 
 The machine has an Apple Development identity and a Developer ID identity, but
-no Apple Distribution / Mac Installer Distribution identity, no Mac App Store
-provisioning profile, and no App Store Connect account session or API key.
+the Apple Distribution and Mac Installer Distribution certificates in the
+keychain expired on 2025-01-11. There is also no Mac App Store provisioning
+profile for `com.sansi.lumeth`, no App Store Connect account session, and no
+API key.
 
 These are account-side operations and cannot be completed without access to
 the Apple Developer / App Store Connect account.
@@ -34,7 +36,7 @@ the Apple Developer / App Store Connect account.
 
 1. Sign in to Xcode with the Apple ID that belongs to team `SV2LZPC92A`
    (Xcode → Settings → Accounts).
-2. In Apple Developer Certificates, create:
+2. In Apple Developer Certificates, renew/create:
    - `Apple Distribution` (Mac App Store)
    - `Mac Installer Distribution`
 3. Register the App ID `com.sansi.lumeth` and create a **Mac App Store**
