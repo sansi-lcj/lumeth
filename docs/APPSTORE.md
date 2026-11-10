@@ -55,8 +55,14 @@ the Apple Developer / App Store Connect account.
    xcodebuild -exportArchive \
      -archivePath build/Lumeth.xcarchive \
      -exportPath build/export \
-     -exportOptionsPlist build/ExportOptions.plist \
+     -exportOptionsPlist scripts/ExportOptions.plist \
      -allowProvisioningUpdates
+   ```
+
+   Or run the helper after the certificates are installed:
+
+   ```bash
+   ./scripts/build-appstore.sh
    ```
 
 7. Upload the exported package with Transporter, or with an App Store Connect
