@@ -78,6 +78,8 @@ it requires a privileged SMC helper.
 
 See [docs/PRIVACY.md](docs/PRIVACY.md).
 
+Support: https://sansi-lcj.github.io/lumeth/support.html
+
 ## Project layout
 
 ```text

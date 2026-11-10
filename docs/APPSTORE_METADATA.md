@@ -42,9 +42,9 @@ requests, background daemon, or privileged helper.
 
 ## URLs
 
-- Support: https://github.com/sansi-lcj/lumeth-support/issues
-- Privacy: https://github.com/sansi-lcj/lumeth-support/blob/main/PRIVACY.md
-- Marketing: https://github.com/sansi-lcj/lumeth-support
+- Support: https://sansi-lcj.github.io/lumeth/support.html
+- Privacy: https://sansi-lcj.github.io/lumeth/privacy.html
+- Marketing: https://sansi-lcj.github.io/lumeth/
 
 ## Screenshots
 
