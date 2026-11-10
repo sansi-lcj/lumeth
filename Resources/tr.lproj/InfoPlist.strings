@@ -1,0 +1,5 @@
+/* Lumeth bundle strings */
+"CFBundleDisplayName" = "Lumeth";
+"CFBundleName" = "Lumeth";
+"NSLocalNetworkUsageDescription" = "Lumeth, ağ etkinliğini göstermek için yalnızca yerel ağ arayüzü sayaçlarını okur. Diğer cihazları taramaz veya bunlara bağlanmaz.";
+"NSHumanReadableCopyright" = "Lumeth · Bağımsız yerel sistem monitörü. İStat Menülerine bağlı değildir.";

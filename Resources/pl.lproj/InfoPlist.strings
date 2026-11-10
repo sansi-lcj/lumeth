@@ -1,0 +1,5 @@
+/* Lumeth bundle strings */
+"CFBundleDisplayName" = "Lumeth";
+"CFBundleName" = "Lumeth";
+"NSLocalNetworkUsageDescription" = "Lumeth odczytuje tylko liczniki interfejsu sieci lokalnej, aby pokazać aktywność sieciową. Nie skanuje ani nie łączy się z innymi urządzeniami.";
+"NSHumanReadableCopyright" = "Lumeth · Niezależny, natywny monitor systemu. Nie jest powiązany z menu iStat.";

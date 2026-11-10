@@ -1,0 +1,9 @@
+.build/
+build/
+outputs/
+.DS_Store
+*.xcuserstate
+xcuserdata/
+scripts/translation-cache.json
+*.xcarchive
+*.pkg

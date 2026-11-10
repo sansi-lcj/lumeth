@@ -1,0 +1,5 @@
+/* Lumeth bundle strings */
+"CFBundleDisplayName" = "Lumeth";
+"CFBundleName" = "Lumeth";
+"NSLocalNetworkUsageDescription" = "Lumeth อ่านเฉพาะตัวนับอินเทอร์เฟซเครือข่ายท้องถิ่นเพื่อแสดงกิจกรรมเครือข่าย ไม่สแกนหรือเชื่อมต่อกับอุปกรณ์อื่น";
+"NSHumanReadableCopyright" = "Lumeth · มอนิเตอร์ระบบเนทิฟอิสระ ไม่มีส่วนเกี่ยวข้องกับเมนู iStat";

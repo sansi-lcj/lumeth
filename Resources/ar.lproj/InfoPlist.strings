@@ -1,0 +1,5 @@
+/* Lumeth bundle strings */
+"CFBundleDisplayName" = "Lumeth";
+"CFBundleName" = "Lumeth";
+"NSLocalNetworkUsageDescription" = "تقوم Lumeth بقراءة عدادات واجهة الشبكة المحلية فقط لإظهار نشاط الشبكة. لا يقوم بالمسح أو الاتصال بالأجهزة الأخرى.";
+"NSHumanReadableCopyright" = "Lumeth · مراقب النظام الأصلي المستقل. لا ينتمي إلى قوائم iStat.";

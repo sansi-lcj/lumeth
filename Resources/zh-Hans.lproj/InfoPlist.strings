@@ -1,0 +1,5 @@
+/* Lumeth bundle strings */
+"CFBundleDisplayName" = "流衡";
+"CFBundleName" = "流衡";
+"NSLocalNetworkUsageDescription" = "流衡只读取本机网卡的流量计数来显示网络活动，不扫描也不连接其他设备。";
+"NSHumanReadableCopyright" = "Lumeth · 独立原生系统监控，与 iStat Menus 无关联。";

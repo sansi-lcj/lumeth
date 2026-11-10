@@ -1,0 +1,5 @@
+/* Lumeth bundle strings */
+"CFBundleDisplayName" = "Lumeth";
+"CFBundleName" = "Lumeth";
+"NSLocalNetworkUsageDescription" = "Lumeth chỉ đọc bộ đếm giao diện mạng cục bộ để hiển thị hoạt động mạng. Nó không quét hoặc kết nối với các thiết bị khác.";
+"NSHumanReadableCopyright" = "Lumeth · Giám sát hệ thống gốc độc lập. Không liên kết với Menu iStat.";
