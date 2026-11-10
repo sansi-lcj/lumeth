@@ -53,6 +53,8 @@
     <true/>
     <key>NSHighResolutionCapable</key>
     <true/>
+    <key>ITSAppUsesNonExemptEncryption</key>
+    <false/>
     <key>NSLocalNetworkUsageDescription</key>
     <string>Lumeth only reads local network interface counters to show network activity. It does not scan or connect to other devices.</string>
     <key>NSHumanReadableCopyright</key>
