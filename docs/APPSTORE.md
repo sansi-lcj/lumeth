@@ -8,7 +8,7 @@ Last checked: 2026-11-11
 - Bundle ID: `com.sansi.lumeth`
 - Version: `1.1`, build `8`
 - Review state: `WAITING_FOR_REVIEW`
-- Price: free in all 175 App Store territories
+- Price: free in 174 App Store territories; mainland China is excluded
 - Age rating: 4+
 - App privacy: no data collected
 - Primary category: Utilities
