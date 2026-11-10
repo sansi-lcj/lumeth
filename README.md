@@ -49,6 +49,12 @@ open Lumeth.xcodeproj
 `project.yml` is the source of truth for the Xcode project. Do not edit
 `Lumeth.xcodeproj` by hand.
 
+## Release
+
+Publish a GitHub Release from a tag such as `v1.2.0`. The App Store workflow
+derives the marketing version, builds and signs the package, uploads it to App
+Store Connect, attaches the processed build and submits it for App Review.
+
 ## Signing
 
 Developer ID distribution:
@@ -61,7 +67,7 @@ codesign --force --options runtime --timestamp \
 
 The App Store target uses `Resources/Lumeth.entitlements` with App Sandbox
 enabled. See [docs/APPSTORE.md](docs/APPSTORE.md) for the current submission
-status and the remaining account-side blockers.
+status and release operation details.
 
 ## Bundle identity
 

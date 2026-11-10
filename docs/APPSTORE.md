@@ -18,8 +18,18 @@ Last checked: 2026-11-11
 
 ## GitHub Actions release
 
-`.github/workflows/appstore.yml` builds, signs, validates and optionally uploads
-the Mac App Store package. It is triggered manually or by a `v*` tag.
+Publishing a GitHub Release is the production trigger. Create a Release from a
+tag such as `v1.2.0` and publish it. `.github/workflows/appstore.yml` then:
+
+1. Resolves the App Store version from the tag.
+2. Creates the new App Store version when needed.
+3. Copies the previous version's English listing, App Review contact and
+   release notes.
+4. Uploads the repository screenshots when the new version has none.
+5. Builds, signs and validates the universal Mac App Store package.
+6. Uploads the package to App Store Connect.
+7. Waits for build processing, attaches it to the version, and submits the
+   version for App Review.
 
 `.github/workflows/build.yml` runs a release Swift build on source changes and
 uses the supported `macos-15-intel` runner.
@@ -36,57 +46,23 @@ Repository secrets:
 - `ASC_KEY_P8`
 
 All certificate and key values are stored as base64 text in encrypted GitHub
-Actions secrets; no signing material is committed to the repository.
+Actions secrets; no signing material is committed to the repository. App Store
+listing text, screenshots and review contact details are not stored in secrets.
 
-Run from the repository Actions tab, or:
+The workflow can also be started manually:
 
 ```bash
-gh workflow run appstore.yml -f upload=true -f version=1.1
+gh workflow run appstore.yml \
+  -f version=1.2.0 \
+  -f upload=true \
+  -f submit_for_review=true \
+  -f release_notes="What changed in this release"
 ```
 
-## Steps to publish
-
-1. Sign in to Xcode with the Apple ID that belongs to team `SV2LZPC92A`
-   (Xcode → Settings → Accounts).
-2. In Apple Developer Certificates, renew/create:
-   - `Apple Distribution` (Mac App Store)
-   - `Mac Installer Distribution`
-3. Register the App ID `com.sansi.lumeth` and create a **Mac App Store**
-   provisioning profile for it.
-4. In App Store Connect, create a macOS app record:
-   - Name: `Lumeth`
-   - SKU: `lumeth-macos`
-   - Bundle ID: `com.sansi.lumeth`
-   - Category: Utilities
-5. Fill in the metadata, privacy policy URL, support URL, age rating and
-   screenshots. Required macOS screenshot sizes include 1280×800,
-   1440×900, 2560×1600 and 2880×1800.
-6. Re-export:
-
-   ```bash
-   xcodebuild -exportArchive \
-     -archivePath build/Lumeth.xcarchive \
-     -exportPath build/export \
-     -exportOptionsPlist scripts/ExportOptions.plist \
-     -allowProvisioningUpdates
-   ```
-
-   Or run the helper after the certificates are installed:
-
-   ```bash
-   ./scripts/build-appstore.sh
-   ```
-
-7. Upload the exported package with Transporter, or with an App Store Connect
-   API key:
-
-   ```bash
-   xcrun altool --upload-app \
-     -f build/export/Lumeth.pkg \
-     -t macos \
-     --apiKey "$ASC_KEY_ID" \
-     --apiIssuer "$ASC_ISSUER_ID"
-   ```
+Before publishing a release, update `docs/screenshot-overview-2560x1600.png`
+and `docs/screenshot-cpu-2560x1600.png` if the UI changed. A release only
+submits a new version automatically after the previous version has left review;
+concurrent App Review submissions are rejected by Apple.
 
 ## App Review notes
 

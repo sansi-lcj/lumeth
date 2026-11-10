@@ -1,31 +1,43 @@
 name: appstore
 
 on:
+  release:
+    types: [published]
   workflow_dispatch:
     inputs:
       upload:
         description: Upload the signed package to App Store Connect
         type: boolean
         default: true
+      submit_for_review:
+        description: Submit the uploaded build for App Review
+        type: boolean
+        default: true
       version:
         description: Marketing version
         type: string
-        default: "1.1"
-  push:
-    tags:
-      - "v*"
+        default: ""
+      release_notes:
+        description: Release notes shown on the App Store
+        type: string
+        default: ""
 
 permissions:
   contents: read
 
+concurrency:
+  group: appstore-${{ github.event.release.tag_name || inputs.version || github.ref }}
+  cancel-in-progress: false
+
 jobs:
   appstore:
     runs-on: macos-15-intel
-    timeout-minutes: 35
+    timeout-minutes: 60
     env:
       BUNDLE_ID: com.sansi.lumeth
       TEAM_ID: SV2LZPC92A
-      VERSION: ${{ inputs.version || '1.1' }}
+      VERSION: ${{ inputs.version || github.event.release.tag_name || '1.1' }}
+      RELEASE_NOTES: ${{ github.event.release.body || inputs.release_notes || '' }}
       APPLE_DISTRIBUTION_P12: ${{ secrets.APPLE_DISTRIBUTION_P12 }}
       APPLE_DISTRIBUTION_P12_PASSWORD: ${{ secrets.APPLE_DISTRIBUTION_P12_PASSWORD }}
       MAC_INSTALLER_P12: ${{ secrets.MAC_INSTALLER_P12 }}
@@ -37,8 +49,31 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Resolve version
+        run: |
+          set -euo pipefail
+          VERSION="${VERSION#v}"
+          if ! [[ "$VERSION" =~ ^[0-9]+(\.[0-9]+){1,2}$ ]]; then
+            echo "Invalid marketing version: $VERSION" >&2
+            exit 1
+          fi
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "Release version: $VERSION"
+
       - name: Install XcodeGen
         run: brew install xcodegen
+
+      - name: Configure App Store Connect API
+        run: |
+          mkdir -p "$HOME/.appstoreconnect/private_keys"
+          echo "$ASC_KEY_P8" | base64 --decode > "$HOME/.appstoreconnect/private_keys/AuthKey_$ASC_KEY_ID.p8"
+          chmod 600 "$HOME/.appstoreconnect/private_keys/AuthKey_$ASC_KEY_ID.p8"
+
+      - name: Prepare App Store version
+        run: |
+          python3 scripts/asc_release.py prepare \
+            --version "$VERSION" \
+            --release-notes "$RELEASE_NOTES"
 
       - name: Prepare version
         run: |
@@ -113,9 +148,6 @@ jobs:
 
       - name: Validate package
         run: |
-          mkdir -p "$HOME/.appstoreconnect/private_keys"
-          echo "$ASC_KEY_P8" | base64 --decode > "$HOME/.appstoreconnect/private_keys/AuthKey_$ASC_KEY_ID.p8"
-          chmod 600 "$HOME/.appstoreconnect/private_keys/AuthKey_$ASC_KEY_ID.p8"
           xcrun altool --validate-app \
             -f build/Lumeth-AppStore.pkg \
             -t macos \
@@ -123,13 +155,20 @@ jobs:
             --apiIssuer "$ASC_ISSUER_ID"
 
       - name: Upload to App Store Connect
-        if: ${{ inputs.upload || startsWith(github.ref, 'refs/tags/') }}
+        if: ${{ github.event_name == 'release' || inputs.upload }}
         run: |
           xcrun altool --upload-app \
             -f build/Lumeth-AppStore.pkg \
             -t macos \
             --apiKey "$ASC_KEY_ID" \
             --apiIssuer "$ASC_ISSUER_ID"
+
+      - name: Submit for App Review
+        if: ${{ (github.event_name == 'release' || inputs.upload) && (github.event_name == 'release' || inputs.submit_for_review) }}
+        run: |
+          python3 scripts/asc_release.py submit \
+            --version "$VERSION" \
+            --build-number "$GITHUB_RUN_NUMBER"
 
       - name: Upload signed package artifact
         uses: actions/upload-artifact@v4
