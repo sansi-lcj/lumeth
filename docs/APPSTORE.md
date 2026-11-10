@@ -32,6 +32,31 @@ API key.
 These are account-side operations and cannot be completed without access to
 the Apple Developer / App Store Connect account.
 
+## GitHub Actions release
+
+`.github/workflows/appstore.yml` builds, signs, validates and optionally uploads
+the Mac App Store package. It is triggered manually or by a `v*` tag.
+
+Repository secrets:
+
+- `APPLE_DISTRIBUTION_P12`
+- `APPLE_DISTRIBUTION_P12_PASSWORD`
+- `MAC_INSTALLER_P12`
+- `MAC_INSTALLER_P12_PASSWORD`
+- `MAC_APP_STORE_PROFILE`
+- `ASC_KEY_ID`
+- `ASC_ISSUER_ID`
+- `ASC_KEY_P8`
+
+All certificate and key values are stored as base64 text in encrypted GitHub
+Actions secrets; no signing material is committed to the repository.
+
+Run from the repository Actions tab, or:
+
+```bash
+gh workflow run appstore.yml -f upload=true -f version=1.1
+```
+
 ## Steps to publish
 
 1. Sign in to Xcode with the Apple ID that belongs to team `SV2LZPC92A`
