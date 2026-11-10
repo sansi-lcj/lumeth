@@ -7,3 +7,6 @@ xcuserdata/
 scripts/translation-cache.json
 *.xcarchive
 *.pkg
+*.p8
+*.p12
+*.cer
