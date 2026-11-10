@@ -63,6 +63,7 @@ root, or network access. Fan control is intentionally not implemented.
 
 ## Current account state
 
-The App Store Connect app record has not been created yet. Distribution
-certificates and a Mac App Store provisioning profile are still missing; see
-`docs/APPSTORE.md`.
+The App Store Connect record exists and version 1.1 build 8 has been submitted.
+The current review state is `WAITING_FOR_REVIEW`. Distribution certificates,
+the Mac App Store provisioning profile, pricing, availability, age rating,
+privacy declaration and screenshots are all configured; see `docs/APPSTORE.md`.

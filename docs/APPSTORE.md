@@ -1,41 +1,28 @@
 # Mac App Store status
 
-Last checked: 2026-11-10
+Last checked: 2026-11-11
 
-## What already works
+## Current status
 
-- The app builds with Xcode and can be archived.
-- The archive is universal (`arm64` + `x86_64`).
-- The archive is signed with the sandbox entitlement
-  `com.apple.security.app-sandbox`.
-- `PrivacyInfo.xcprivacy` is embedded for UserDefaults and system boot time.
-- A local sandbox smoke test still reported CPU, memory, network, disk, GPU,
-  battery and 21 HID temperature sensors.
-- The Xcode archive succeeded with Apple Development signing.
-
-## Current blocker
-
-`xcodebuild -exportArchive` for App Store Connect stops with:
-
-```text
-No Accounts
-No signing certificate "Mac Installer Distribution" found
-No profiles for 'com.sansi.lumeth' were found
-```
-
-The machine has an Apple Development identity and a Developer ID identity, but
-the Apple Distribution and Mac Installer Distribution certificates in the
-keychain expired on 2025-01-11. There is also no Mac App Store provisioning
-profile for `com.sansi.lumeth`, no App Store Connect account session, and no
-API key.
-
-These are account-side operations and cannot be completed without access to
-the Apple Developer / App Store Connect account.
+- App Store Connect record: `Lumeth`, App ID `6833060702`
+- Bundle ID: `com.sansi.lumeth`
+- Version: `1.1`, build `8`
+- Review state: `WAITING_FOR_REVIEW`
+- Price: free in all 175 App Store territories
+- Age rating: 4+
+- App privacy: no data collected
+- Primary category: Utilities
+- Screenshots: two 2560×1600 desktop screenshots uploaded
+- Distribution certificate and Mac App Store profile are valid through
+  2027-11-10.
 
 ## GitHub Actions release
 
 `.github/workflows/appstore.yml` builds, signs, validates and optionally uploads
 the Mac App Store package. It is triggered manually or by a `v*` tag.
+
+`.github/workflows/build.yml` runs a release Swift build on source changes and
+uses the supported `macos-15-intel` runner.
 
 Repository secrets:
 
