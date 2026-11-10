@@ -20,7 +20,7 @@ permissions:
 
 jobs:
   appstore:
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 35
     env:
       BUNDLE_ID: com.sansi.lumeth
