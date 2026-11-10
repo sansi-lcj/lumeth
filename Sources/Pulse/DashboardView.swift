@@ -720,17 +720,15 @@ private struct PulseWave: View {
                     )
                 }
 
-                var line = Path()
+                var points: [CGPoint] = []
                 for (index, value) in samples.enumerated() {
                     let x = CGFloat(index) * step
                     let y = size.height - CGFloat(min(top, max(0, value)) / top) * (size.height - 4) - 2
-                    if index == 0 {
-                        line.move(to: CGPoint(x: x, y: y))
-                    } else {
-                        line.addLine(to: CGPoint(x: x, y: y))
-                    }
+                    points.append(CGPoint(x: x, y: y))
                 }
 
+                let plot = CGRect(x: 0, y: 0, width: size.width, height: size.height)
+                let line = ChartPath.smooth(points, in: plot)
                 var area = line
                 area.addLine(to: CGPoint(x: size.width, y: size.height))
                 area.addLine(to: CGPoint(x: 0, y: size.height))

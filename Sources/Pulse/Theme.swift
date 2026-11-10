@@ -157,6 +157,32 @@ struct RingGauge: View {
     }
 }
 
+enum ChartPath {
+    static func smooth(_ points: [CGPoint], in bounds: CGRect) -> Path {
+        var path = Path()
+        guard let first = points.first else { return path }
+        path.move(to: first)
+        guard points.count > 1 else { return path }
+
+        for index in 0..<(points.count - 1) {
+            let p0 = points[max(0, index - 1)]
+            let p1 = points[index]
+            let p2 = points[index + 1]
+            let p3 = points[min(points.count - 1, index + 2)]
+            let c1 = CGPoint(
+                x: p1.x + (p2.x - p0.x) / 6,
+                y: min(bounds.maxY, max(bounds.minY, p1.y + (p2.y - p0.y) / 6))
+            )
+            let c2 = CGPoint(
+                x: p2.x - (p3.x - p1.x) / 6,
+                y: min(bounds.maxY, max(bounds.minY, p2.y - (p3.y - p1.y) / 6))
+            )
+            path.addCurve(to: p2, control1: c1, control2: c2)
+        }
+        return path
+    }
+}
+
 struct AreaChart: View {
     var values: [Double]
     var color: Color
@@ -182,18 +208,16 @@ struct AreaChart: View {
                 }
             }
 
-            var line = Path()
+            let plot = CGRect(x: 0, y: 0, width: size.width, height: size.height)
+            var points: [CGPoint] = []
             for (index, value) in values.enumerated() {
                 let x = CGFloat(index) * step
                 let normalized = min(1, max(0, value / top))
                 let y = size.height - CGFloat(normalized) * (size.height - 2) - 1
-                if index == 0 {
-                    line.move(to: CGPoint(x: x, y: y))
-                } else {
-                    line.addLine(to: CGPoint(x: x, y: y))
-                }
+                points.append(CGPoint(x: x, y: y))
             }
 
+            let line = ChartPath.smooth(points, in: plot)
             var area = line
             area.addLine(to: CGPoint(x: size.width, y: size.height))
             area.addLine(to: CGPoint(x: 0, y: size.height))
