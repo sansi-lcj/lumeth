@@ -25,6 +25,7 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN" "$APP/Contents/MacOS/Lumeth"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
+cp Resources/PrivacyInfo.xcprivacy "$APP/Contents/Resources/PrivacyInfo.xcprivacy"
 cp "$ASSETS/AppIcon.icns" "$APP/Contents/Resources/AppIcon.icns"
 cp "$ASSETS/Assets.car" "$APP/Contents/Resources/Assets.car"
 

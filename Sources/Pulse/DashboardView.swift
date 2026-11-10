@@ -401,14 +401,9 @@ private struct PulseCPUCard: View {
                 )
             }
 
-            DotMatrix(
-                values: model.cpuHistory,
-                maxValue: 100,
-                color: PulseTheme.azure,
-                columns: 62,
-                rows: 6
-            )
-            .frame(height: 46)
+            PulseWave(values: model.cpuHistory, accent: PulseTheme.azure)
+                .frame(height: 50)
+                .opacity(0.9)
         }
         .padding(14)
         .background(
@@ -480,14 +475,15 @@ private struct SignalCard: View {
                 }
             }
 
-            DotMatrix(
+            AreaChart(
                 values: history,
-                maxValue: maxHistory,
                 color: accent,
-                columns: 34,
-                rows: 5
+                maxValue: maxHistory,
+                showGrid: true,
+                lineWidth: 1.4,
+                fillOpacity: 0.12
             )
-            .frame(height: 26)
+            .frame(height: 28)
         }
         .padding(11)
         .background(
@@ -510,17 +506,15 @@ private struct CardHeading: View {
 
     var body: some View {
         HStack(spacing: 7) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .fill(accent.opacity(0.13))
-                Image(systemName: icon)
-                    .font(.system(size: 9, weight: .semibold))
-                    .foregroundStyle(accent)
-            }
-            .frame(width: 22, height: 22)
-            Text(LocalizedStringKey(title))
-                .font(.system(size: 11, weight: .semibold, design: .rounded))
+            RoundedRectangle(cornerRadius: 1)
+                .fill(accent)
+                .frame(width: 2, height: 13)
+            Image(systemName: icon)
+                .font(.system(size: 9.5, weight: .semibold))
                 .foregroundStyle(accent)
+            Text(LocalizedStringKey(title))
+                .font(.system(size: 11.5, weight: .semibold, design: .rounded))
+                .foregroundStyle(PulseTheme.text)
             Spacer(minLength: 4)
             Image(systemName: "chevron.right")
                 .font(.system(size: 7.5, weight: .semibold))
@@ -713,6 +707,19 @@ private struct PulseWave: View {
                 }
                 let top = max(60, samples.max() ?? 60)
                 let step = size.width / CGFloat(max(1, samples.count - 1))
+
+                for fraction in [0.25, 0.5, 0.75] {
+                    var grid = Path()
+                    let y = size.height * fraction
+                    grid.move(to: CGPoint(x: 0, y: y))
+                    grid.addLine(to: CGPoint(x: size.width, y: y))
+                    context.stroke(
+                        grid,
+                        with: .color(Color.white.opacity(0.04)),
+                        lineWidth: 0.8
+                    )
+                }
+
                 var line = Path()
                 for (index, value) in samples.enumerated() {
                     let x = CGFloat(index) * step
@@ -731,7 +738,7 @@ private struct PulseWave: View {
                 context.fill(
                     area,
                     with: .linearGradient(
-                        Gradient(colors: [accent.opacity(0.20), accent.opacity(0.015)]),
+                        Gradient(colors: [accent.opacity(0.10), accent.opacity(0.01)]),
                         startPoint: .zero,
                         endPoint: CGPoint(x: 0, y: size.height)
                     )

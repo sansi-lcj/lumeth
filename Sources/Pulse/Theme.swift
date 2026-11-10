@@ -163,6 +163,7 @@ struct AreaChart: View {
     var maxValue: Double?
     var showGrid: Bool = true
     var lineWidth: CGFloat = 1.6
+    var fillOpacity: Double = 0.32
 
     var body: some View {
         Canvas { context, size in
@@ -200,56 +201,12 @@ struct AreaChart: View {
             context.fill(
                 area,
                 with: .linearGradient(
-                    Gradient(colors: [color.opacity(0.32), color.opacity(0.02)]),
+                    Gradient(colors: [color.opacity(fillOpacity), color.opacity(0.015)]),
                     startPoint: .zero,
                     endPoint: CGPoint(x: 0, y: size.height)
                 )
             )
             context.stroke(line, with: .color(color), style: StrokeStyle(lineWidth: lineWidth, lineCap: .round, lineJoin: .round))
-        }
-    }
-}
-
-struct DotMatrix: View {
-    var values: [Double]
-    var maxValue: Double
-    var color: Color
-    var columns: Int = 58
-    var rows: Int = 6
-
-    var body: some View {
-        Canvas { context, size in
-            guard size.width > 4, size.height > 4 else { return }
-            let source = Array(values.suffix(columns))
-            let fill = values.last ?? 0
-            let padded = Array(repeating: fill, count: max(0, columns - source.count)) + source
-            let top = max(maxValue, 0.0001)
-            let stepX = size.width / CGFloat(max(1, columns - 1))
-            let stepY = size.height / CGFloat(max(1, rows - 1))
-            let diameter = min(stepX, stepY) * 0.36
-
-            for column in 0..<columns {
-                let value = column < padded.count ? padded[column] : 0
-                let lit = Int(round(min(1, max(0, value / top)) * Double(rows)))
-                let x = CGFloat(column) * stepX
-                for row in 0..<rows {
-                    let y = size.height - CGFloat(row) * stepY
-                    let active = row < lit
-                    let opacity = active
-                        ? 0.92 - Double(row) * 0.055
-                        : 0.075
-                    let rect = CGRect(
-                        x: x - diameter / 2,
-                        y: y - diameter / 2,
-                        width: diameter,
-                        height: diameter
-                    )
-                    context.fill(
-                        Path(ellipseIn: rect),
-                        with: .color(color.opacity(max(0.03, opacity)))
-                    )
-                }
-            }
         }
     }
 }

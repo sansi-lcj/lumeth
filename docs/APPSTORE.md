@@ -5,8 +5,10 @@ Last checked: 2026-11-10
 ## What already works
 
 - The app builds with Xcode and can be archived.
+- The archive is universal (`arm64` + `x86_64`).
 - The archive is signed with the sandbox entitlement
   `com.apple.security.app-sandbox`.
+- `PrivacyInfo.xcprivacy` is embedded for UserDefaults and system boot time.
 - A local sandbox smoke test still reported CPU, memory, network, disk, GPU,
   battery and 21 HID temperature sensors.
 - The Xcode archive succeeded with Apple Development signing.

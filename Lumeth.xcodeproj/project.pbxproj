@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		00ED0AA2D8E78E5FAE11CFBA /* NotchController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47078F3FD5B68AB9A9D75678 /* NotchController.swift */; };
+		03D590EFE2E41C3DFC6E4676 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = BC7D924117767E15BDF2FBE9 /* PrivacyInfo.xcprivacy */; };
 		1771EE407C43923F08C6A3A4 /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = A142C83385575E80C84765D2 /* Localization.swift */; };
 		1DD06BDD98235077DA7C1873 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 18AAD580BC148D6118B0B604 /* Assets.xcassets */; };
 		2D81BB990D09355717F18C06 /* Sensors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA99C1D1399BC3E3A08A0F6 /* Sensors.swift */; };
@@ -58,6 +59,7 @@
 		9FC81717ECF0271EFE856551 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		A142C83385575E80C84765D2 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
 		B8A2473A1436C4F77E62FB28 /* Lumeth.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Lumeth.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		BC7D924117767E15BDF2FBE9 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		BDBCDA0C773A401BB46C74C0 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		BF75E31218A9BA097354C258 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		C8E0FEDED387328444F32E2D /* PulseMain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PulseMain.swift; sourceTree = "<group>"; };
@@ -95,6 +97,7 @@
 			isa = PBXGroup;
 			children = (
 				18AAD580BC148D6118B0B604 /* Assets.xcassets */,
+				BC7D924117767E15BDF2FBE9 /* PrivacyInfo.xcprivacy */,
 				B91D6ABECE4A5EDC68869FEF /* InfoPlist.strings */,
 				E0FCE544B9926003495086AE /* Localizable.strings */,
 			);
@@ -206,6 +209,7 @@
 				1DD06BDD98235077DA7C1873 /* Assets.xcassets in Resources */,
 				9872C8059F9F617D871C390C /* InfoPlist.strings in Resources */,
 				3EF501CC0DDFCE1B43DCC34E /* Localizable.strings in Resources */,
+				03D590EFE2E41C3DFC6E4676 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
