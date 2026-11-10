@@ -17,6 +17,10 @@ The app is written in Swift and SwiftUI, with no third-party runtime dependencie
 - Disk throughput and capacity
 - Battery level, cycles and health
 - Temperature sensors via the root-free IOHID path
+- Persistent 24-hour local history with 1m/5m/15m/1h/24h ranges
+- Sustained CPU, memory, temperature and battery alerts
+- Active network interfaces with local IPv4/IPv6 addresses
+- CPU/GPU peak and all-sensor average temperatures
 - 18 localizations; Chinese uses `zh-Hans` / `zh-Hant`
 - Compact mode is 32 pt tall and flush with the notch
 - Click outside, press `Esc`, or use the chevron to collapse
@@ -83,6 +87,9 @@ or install a privileged helper. Fan control is intentionally not included;
 it requires a privileged SMC helper.
 
 See [docs/PRIVACY.md](docs/PRIVACY.md).
+
+Competitor feature research and inclusion decisions are recorded in
+[docs/FEATURE_RESEARCH.md](docs/FEATURE_RESEARCH.md).
 
 Support: https://sansi-lcj.github.io/lumeth/support.html
 

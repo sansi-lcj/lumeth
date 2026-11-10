@@ -7,19 +7,22 @@ struct SettingsView: View {
     var body: some View {
         ZStack {
             SettingsBackground()
-            VStack(alignment: .leading, spacing: 18) {
-                header
-                notchPanel
-                items
-                refresh
-                footer
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 18) {
+                    header
+                    notchPanel
+                    items
+                    refresh
+                    alerts
+                    footer
+                }
+                .padding(.horizontal, 22)
+                .padding(.top, 34)
+                .padding(.bottom, 20)
+                .frame(maxWidth: .infinity, alignment: .topLeading)
             }
-            .padding(.horizontal, 22)
-            .padding(.top, 34)
-            .padding(.bottom, 20)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
-        .frame(width: 460, height: 700)
+        .frame(width: 460, height: 780)
         .preferredColorScheme(.dark)
     }
 
@@ -44,12 +47,12 @@ struct SettingsView: View {
                 Text(L("流衡设置"))
                     .font(.system(size: 20, weight: .bold, design: .rounded))
                     .foregroundStyle(PulseTheme.text)
-                Text(L("刘海面板、折叠内容与采样频率"))
+                Text(L("刘海面板、历史、提醒与采样频率"))
                     .font(.system(size: 10.5, weight: .medium, design: .rounded))
                     .foregroundStyle(PulseTheme.tertiary)
             }
             Spacer()
-            Text("1.1")
+            Text(AppVersion.short)
                 .font(.system(size: 9, weight: .semibold, design: .monospaced))
                 .foregroundStyle(PulseTheme.tertiary)
                 .padding(.horizontal, 8)
@@ -223,6 +226,103 @@ struct SettingsView: View {
         }
     }
 
+    private var alerts: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            sectionTitle("智能提醒")
+            VStack(spacing: 0) {
+                ToggleRow(
+                    title: "处理器持续偏高",
+                    detail: "超过阈值并持续一段时间后提醒",
+                    icon: "cpu",
+                    color: PulseTheme.azure,
+                    isOn: $settings.alertCPU,
+                    canDisable: true
+                )
+                ToggleRow(
+                    title: "内存压力持续偏高",
+                    detail: "内存压力达到偏高或严重时提醒",
+                    icon: "memorychip",
+                    color: PulseTheme.violet,
+                    isOn: $settings.alertMemory,
+                    canDisable: true
+                )
+                ToggleRow(
+                    title: "温度持续偏高",
+                    detail: "最高温度传感器超过阈值后提醒",
+                    icon: "thermometer.medium",
+                    color: PulseTheme.cyan,
+                    isOn: $settings.alertTemperature,
+                    canDisable: true
+                )
+                ToggleRow(
+                    title: "电池电量偏低",
+                    detail: "使用电池且低于阈值时提醒",
+                    icon: "battery.25",
+                    color: PulseTheme.azure,
+                    isOn: $settings.alertBattery,
+                    canDisable: true
+                )
+            }
+            .background(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(Color.white.opacity(0.035))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .stroke(Color.white.opacity(0.06), lineWidth: 1)
+                    )
+            )
+
+            if settings.alertCPU
+                || settings.alertMemory
+                || settings.alertTemperature
+                || settings.alertBattery {
+                VStack(spacing: 6) {
+                    if settings.alertCPU {
+                        AlertThresholdRow(
+                            title: "处理器阈值",
+                            value: $settings.cpuAlertThreshold,
+                            range: 50...100,
+                            step: 5,
+                            suffix: "%"
+                        )
+                    }
+                    if settings.alertTemperature {
+                        AlertThresholdRow(
+                            title: "温度阈值",
+                            value: $settings.temperatureAlertThreshold,
+                            range: 70...110,
+                            step: 1,
+                            suffix: "°C"
+                        )
+                    }
+                    if settings.alertBattery {
+                        AlertThresholdRow(
+                            title: "电池阈值",
+                            value: $settings.batteryAlertThreshold,
+                            range: 5...50,
+                            step: 5,
+                            suffix: "%"
+                        )
+                    }
+                    AlertDurationRow(value: $settings.alertDuration)
+                }
+                .padding(10)
+                .background(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(Color.white.opacity(0.025))
+                )
+                HStack(alignment: .top, spacing: 6) {
+                    Image(systemName: "bell.badge")
+                        .font(.system(size: 8.5, weight: .semibold))
+                    Text(L("提醒使用 macOS 本地通知；如未收到，请在系统设置中允许 Lumeth 通知。"))
+                        .font(.system(size: 8.5, weight: .medium, design: .rounded))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .foregroundStyle(PulseTheme.tertiary)
+            }
+        }
+    }
+
     private func sectionTitle(_ title: String) -> some View {
         Text(LocalizedStringKey(title))
             .font(.system(size: 9, weight: .bold, design: .rounded))
@@ -243,6 +343,50 @@ struct SettingsView: View {
         case .memory: return settings.showMemory
         case .network: return settings.showNetwork
         case .sensors: return settings.showSensors
+        }
+    }
+}
+
+private struct AlertThresholdRow: View {
+    let title: String
+    @Binding var value: Int
+    let range: ClosedRange<Int>
+    let step: Int
+    let suffix: String
+
+    var body: some View {
+        HStack {
+            Text(LocalizedStringKey(title))
+                .font(.system(size: 10, weight: .medium, design: .rounded))
+                .foregroundStyle(PulseTheme.secondary)
+            Spacer()
+            Stepper(value: $value, in: range, step: step) {
+                Text("\(value)\(suffix)")
+                    .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                    .foregroundStyle(PulseTheme.text)
+                    .frame(width: 52, alignment: .trailing)
+            }
+            .fixedSize()
+        }
+    }
+}
+
+private struct AlertDurationRow: View {
+    @Binding var value: Double
+
+    var body: some View {
+        HStack {
+            Text(L("持续时间"))
+                .font(.system(size: 10, weight: .medium, design: .rounded))
+                .foregroundStyle(PulseTheme.secondary)
+            Spacer()
+            Stepper(value: $value, in: 5...60, step: 5) {
+                Text(L("%d 秒", Int(value)))
+                    .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                    .foregroundStyle(PulseTheme.text)
+                    .frame(width: 52, alignment: .trailing)
+            }
+            .fixedSize()
         }
     }
 }

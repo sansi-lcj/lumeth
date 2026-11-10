@@ -1,5 +1,12 @@
 import Foundation
 
+enum AppVersion {
+    static var short: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
+            ?? "—"
+    }
+}
+
 enum CoreKind: String {
     case performance = "P"
     case efficiency = "E"
@@ -67,6 +74,20 @@ struct NetworkStats {
     var totalUp: Double = 0
     var interfaceName: String = "—"
     var isConnected: Bool = false
+    var addresses: [String] = []
+    var interfaces: [NetworkInterfaceStats] = []
+}
+
+struct NetworkInterfaceStats: Identifiable {
+    var id: String { name }
+    let name: String
+    let downRate: Double
+    let upRate: Double
+    let totalDown: Double
+    let totalUp: Double
+    let addresses: [String]
+    let isPrimary: Bool
+    let isConnected: Bool
 }
 
 struct DiskStats {
@@ -115,6 +136,10 @@ struct SensorReading: Identifiable {
     let value: Double
     let unit: String
     let category: SensorCategory
+
+    var isTemperature: Bool {
+        unit.contains("°")
+    }
 }
 
 struct ProcessItem: Identifiable {

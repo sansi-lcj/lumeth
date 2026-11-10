@@ -271,7 +271,8 @@ final class SystemSampler: @unchecked Sendable {
             }
         }
 
-        let excluded: Set<String> = ["lo0", "awdl0", "llw0", "utun0", "utun1", "utun2", "utun3", "anpi0", "ap1"]
+        let addresses = readInterfaceAddresses()
+        let excluded: Set<String> = ["lo0", "awdl0", "llw0", "anpi0", "ap1"]
         let primary = current.keys.contains("en0")
             ? "en0"
             : current.keys.filter { !excluded.contains($0) }.sorted().first
@@ -279,6 +280,7 @@ final class SystemSampler: @unchecked Sendable {
         if let primary, let counters = current[primary] {
             stats.totalDown = Double(counters.down)
             stats.totalUp = Double(counters.up)
+            stats.addresses = addresses[primary] ?? []
             if let previous = previousNetwork[primary] {
                 let down = counters.down >= previous.down ? counters.down - previous.down : counters.down
                 let up = counters.up >= previous.up ? counters.up - previous.up : counters.up
@@ -287,8 +289,94 @@ final class SystemSampler: @unchecked Sendable {
             }
             stats.isConnected = (counters.flags & 0x1) != 0
         }
+
+        stats.interfaces = current.compactMap { name, counters in
+            guard !excluded.contains(name) else { return nil }
+            let interfaceAddresses = addresses[name] ?? []
+            let isUp = (counters.flags & 0x1) != 0
+            guard name == primary
+                || !interfaceAddresses.isEmpty
+                || counters.down + counters.up > 0
+            else {
+                return nil
+            }
+            var downRate = 0.0
+            var upRate = 0.0
+            if let previous = previousNetwork[name] {
+                let down = counters.down >= previous.down ? counters.down - previous.down : counters.down
+                let up = counters.up >= previous.up ? counters.up - previous.up : counters.up
+                downRate = Double(down) / elapsed
+                upRate = Double(up) / elapsed
+            }
+            return NetworkInterfaceStats(
+                name: name,
+                downRate: downRate,
+                upRate: upRate,
+                totalDown: Double(counters.down),
+                totalUp: Double(counters.up),
+                addresses: interfaceAddresses,
+                isPrimary: name == primary,
+                isConnected: isUp
+            )
+        }
+        .sorted { left, right in
+            if left.isPrimary != right.isPrimary { return left.isPrimary }
+            if left.isConnected != right.isConnected { return left.isConnected }
+            if left.name.hasPrefix("en") != right.name.hasPrefix("en") {
+                return left.name.hasPrefix("en")
+            }
+            return left.name < right.name
+        }
+        .prefix(8)
+        .map { $0 }
         previousNetwork = current
         return stats
+    }
+
+    private func readInterfaceAddresses() -> [String: [String]] {
+        var result: [String: [String]] = [:]
+        var first: UnsafeMutablePointer<ifaddrs>?
+        guard getifaddrs(&first) == 0, let first else { return result }
+        defer { freeifaddrs(first) }
+
+        var cursor: UnsafeMutablePointer<ifaddrs>? = first
+        while let entry = cursor {
+            defer { cursor = entry.pointee.ifa_next }
+            guard let address = entry.pointee.ifa_addr else { continue }
+            let family = address.pointee.sa_family
+            guard family == UInt8(AF_INET) || family == UInt8(AF_INET6) else {
+                continue
+            }
+            var host = [CChar](repeating: 0, count: Int(NI_MAXHOST))
+            let length = socklen_t(address.pointee.sa_len)
+            guard getnameinfo(
+                address,
+                length,
+                &host,
+                socklen_t(host.count),
+                nil,
+                0,
+                NI_NUMERICHOST
+            ) == 0 else { continue }
+            let value = String(cString: host)
+            guard value != "127.0.0.1", value != "::1", !value.hasPrefix("fe80:") else {
+                continue
+            }
+            let name = String(cString: entry.pointee.ifa_name)
+            if !(result[name]?.contains(value) ?? false) {
+                result[name, default: []].append(value)
+            }
+        }
+
+        for name in result.keys {
+            result[name]?.sort { left, right in
+                let leftIPv4 = !left.contains(":")
+                let rightIPv4 = !right.contains(":")
+                if leftIPv4 != rightIPv4 { return leftIPv4 }
+                return left < right
+            }
+        }
+        return result
     }
 
     // MARK: - Disk

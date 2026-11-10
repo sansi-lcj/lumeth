@@ -175,6 +175,56 @@ EN = {
         "requests are made."
     ),
     "完成": "Done",
+    "最高": "Peak",
+    "历史范围": "History range",
+    "均值 %@": "Avg %@",
+    "峰值 %@": "Peak %@",
+    "下载均速 %@ · 峰值 %@": "Down avg %@ · peak %@",
+    "上传均速 %@ · 峰值 %@": "Up avg %@ · peak %@",
+    "本机地址": "Local address",
+    "活跃接口": "Active interfaces",
+    "主接口": "Primary",
+    "无本机地址": "No local address",
+    "CPU 最高": "CPU peak",
+    "GPU 最高": "GPU peak",
+    "全机平均": "System average",
+    "读取峰值 %@": "Read peak %@",
+    "写入峰值 %@": "Write peak %@",
+    "刘海面板、历史、提醒与采样频率": (
+        "Notch panel, history, alerts, and sampling"
+    ),
+    "智能提醒": "Smart alerts",
+    "处理器持续偏高": "Sustained high CPU",
+    "超过阈值并持续一段时间后提醒": (
+        "Notify after the threshold stays exceeded for a set duration"
+    ),
+    "内存压力持续偏高": "Sustained memory pressure",
+    "内存压力达到偏高或严重时提醒": (
+        "Notify when memory pressure reaches elevated or critical"
+    ),
+    "温度持续偏高": "Sustained high temperature",
+    "最高温度传感器超过阈值后提醒": (
+        "Notify when the hottest sensor stays above the threshold"
+    ),
+    "电池电量偏低": "Low battery",
+    "使用电池且低于阈值时提醒": (
+        "Notify on battery power when the charge falls below the threshold"
+    ),
+    "处理器阈值": "CPU threshold",
+    "温度阈值": "Temperature threshold",
+    "电池阈值": "Battery threshold",
+    "持续时间": "Duration",
+    "处理器负载持续偏高": "Sustained high CPU load",
+    "处理器已高于 %@，持续 %@。": "CPU has stayed above %@ for %@.",
+    "当前内存压力为 %@，已持续 %@。": "Memory pressure has been %@ for %@.",
+    "最高传感器温度为 %@，已持续 %@。": (
+        "The hottest sensor has been %@ for %@."
+    ),
+    "当前电量为 %@，请连接电源。": "Battery is at %@. Connect a power adapter.",
+    "提醒使用 macOS 本地通知；如未收到，请在系统设置中允许 Lumeth 通知。": (
+        "Alerts use local macOS notifications. If you do not see them, "
+        "allow Lumeth notifications in System Settings."
+    ),
 }
 
 FORMAT_RE = re.compile(
@@ -265,6 +315,13 @@ ZH_HANT_OVERRIDES = {
     "采样 %.0f ms": "取樣 %.0f ms",
     "采样": "取樣",
     "正在采集进程…": "正在收集程序…",
+    "历史范围": "歷史區間",
+    "活跃接口": "使用中的網路介面",
+    "智能提醒": "智慧提醒",
+    "本机地址": "本機位址",
+    "主接口": "主要介面",
+    "全机平均": "全機平均",
+    "均值 %@": "平均值 %@",
 }
 
 ZH_HANS_OVERRIDES = {
@@ -380,6 +437,7 @@ LOCALE_OVERRIDES = {
         "流衡设置": "Lumeth 設定",
         "待机贴合刘海；点击展开完整面板。点击外部或按 Esc 收回。": "ノッチに沿って常時表示されます。クリックでパネルを開きます。外側をクリックするか Esc で閉じます。",
         "收起面板": "パネルを閉じる",
+        "持续时间": "継続時間",
     },
     "ko": {
         "内存压力：%@": "메모리 압력: %@",
@@ -390,6 +448,8 @@ LOCALE_OVERRIDES = {
         "热度": "열",
         "待机贴合刘海；点击展开完整面板。点击外部或按 Esc 收回。": "노치에 항상 표시됩니다. 클릭하면 전체 패널이 열립니다. 바깥을 클릭하거나 Esc를 누르면 닫힙니다.",
         "收起面板": "패널 접기",
+        "历史范围": "기록 범위",
+        "持续时间": "지속 시간",
     },
     "fr": {
         "%@ 可用": "%@ libres",
@@ -408,6 +468,7 @@ LOCALE_OVERRIDES = {
         "采样与吞吐": "Abtastung und Durchsatz",
         "采样": "Abtastung",
         "收起面板": "Panel einklappen",
+        "历史范围": "Verlaufszeitraum",
     },
     "es": {
         "%@ 可用": "%@ disponibles",
@@ -451,6 +512,7 @@ LOCALE_OVERRIDES = {
         "热度": "الحرارة",
         "待机贴合刘海；点击展开完整面板。点击外部或按 Esc 收回。": "يلتصق بالشق في وضع السكون. انقر لفتح اللوحة الكاملة. انقر خارجها أو اضغط Esc للإغلاق.",
         "收起面板": "طي اللوحة",
+        "历史范围": "نطاق السجل",
     },
     "hi": {
         "%@ 可用": "%@ उपलब्ध",
@@ -469,6 +531,7 @@ LOCALE_OVERRIDES = {
         "关于本机": "เกี่ยวกับ Mac เครื่องนี้",
         "待机贴合刘海；点击展开完整面板。点击外部或按 Esc 收回。": "แสดงชิดกับรอยบากตลอดเวลา คลิกเพื่อเปิดแผงเต็ม คลิกด้านนอกหรือกด Esc เพื่อปิด",
         "收起面板": "ย่อแผง",
+        "历史范围": "ช่วงเวลาย้อนหลัง",
     },
     "vi": {
         "%@ 可用": "%@ trống",
@@ -486,6 +549,7 @@ LOCALE_OVERRIDES = {
         "热度": "Termal",
         "待机贴合刘海；点击展开完整面板。点击外部或按 Esc 收回。": "Menempel pada notch saat diam. Klik untuk membuka panel penuh. Klik di luar atau tekan Esc untuk menutup.",
         "收起面板": "Ciutkan panel",
+        "历史范围": "Rentang riwayat",
     },
     "tr": {
         "%@ 可用": "%@ boş",
@@ -504,6 +568,7 @@ LOCALE_OVERRIDES = {
         "流衡设置": "Ustawienia Lumeth",
         "待机贴合刘海；点击展开完整面板。点击外部或按 Esc 收回。": "W spoczynku przylega do wycięcia. Kliknij, aby otworzyć panel. Kliknij poza nim lub naciśnij Esc, aby zamknąć.",
         "收起面板": "Zwiń panel",
+        "处理器持续偏高": "Utrzymujące się wysokie obciążenie CPU",
     },
 }
 

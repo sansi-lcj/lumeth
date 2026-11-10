@@ -122,7 +122,7 @@ private struct NavigationRail: View {
                 Circle()
                     .fill(PulseTheme.azure)
                     .frame(width: 4, height: 4)
-                Text("v1.1")
+                Text("v\(AppVersion.short)")
                     .font(.system(size: 6.5, weight: .semibold, design: .monospaced))
                     .foregroundStyle(PulseTheme.tertiary)
             }
@@ -177,7 +177,12 @@ private struct PageHeader: View {
                     .minimumScaleFactor(0.75)
             }
             Spacer(minLength: 8)
-            IntervalPicker(settings: model.settings)
+            HStack(spacing: 6) {
+                if model.selectedTab.supportsHistory {
+                    HistoryRangePicker(settings: model.settings)
+                }
+                IntervalPicker(settings: model.settings)
+            }
         }
         .padding(.horizontal, 18)
         .padding(.top, 15)
@@ -236,6 +241,65 @@ private struct IntervalPicker: View {
             RoundedRectangle(cornerRadius: 9, style: .continuous)
                 .stroke(PulseTheme.stroke, lineWidth: 1)
         )
+    }
+}
+
+private struct HistoryRangePicker: View {
+    @ObservedObject var settings: AppSettings
+
+    var body: some View {
+        Menu {
+            ForEach(HistoryRange.allCases) { range in
+                Button {
+                    settings.historyRange = range
+                } label: {
+                    if settings.historyRange == range {
+                        Label(range.label, systemImage: "checkmark")
+                    } else {
+                        Text(range.label)
+                    }
+                }
+            }
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: "clock.arrow.circlepath")
+                    .font(.system(size: 9, weight: .semibold))
+                Text(settings.historyRange.label)
+                    .font(.system(size: 9, weight: .semibold, design: .monospaced))
+            }
+            .foregroundStyle(PulseTheme.secondary)
+            .frame(height: 28)
+            .padding(.horizontal, 9)
+            .contentShape(Rectangle())
+            .background(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(Color.white.opacity(0.035))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .stroke(PulseTheme.stroke, lineWidth: 1)
+            )
+        }
+        .menuStyle(.borderlessButton)
+        .fixedSize()
+        .help(L("历史范围"))
+    }
+}
+
+private struct HistoryStatLine: View {
+    var average: String
+    var maximum: String
+
+    var body: some View {
+        HStack(spacing: 14) {
+            Label(average, systemImage: "waveform")
+            Label(maximum, systemImage: "arrow.up.right")
+            Spacer()
+        }
+        .font(.system(size: 8.5, weight: .medium, design: .monospaced))
+        .foregroundStyle(PulseTheme.tertiary)
+        .lineLimit(1)
+        .minimumScaleFactor(0.7)
     }
 }
 
@@ -401,7 +465,7 @@ private struct PulseCPUCard: View {
                 )
             }
 
-            PulseWave(values: model.cpuHistory, accent: PulseTheme.azure)
+            PulseWave(values: model.compactCPUHistory, accent: PulseTheme.azure)
                 .frame(height: 50)
                 .opacity(0.9)
         }
@@ -603,7 +667,7 @@ private struct PulseHero: View {
                     )
                 )
 
-            PulseWave(values: model.cpuHistory, accent: PulseTheme.azure)
+            PulseWave(values: model.compactCPUHistory, accent: PulseTheme.azure)
                 .padding(.horizontal, 10)
                 .padding(.bottom, 8)
                 .frame(maxHeight: .infinity, alignment: .bottom)
@@ -918,9 +982,15 @@ private struct CPUPage: View {
                 }
             }
 
-            ConsoleCard(title: "处理器历史", trailing: "LIVE") {
+            ConsoleCard(title: "处理器历史", trailing: model.settings.historyRange.label) {
                 AreaChart(values: model.cpuHistory, color: PulseTheme.azure, maxValue: 100)
                     .frame(height: 74)
+                if let summary = model.historySummary(\.cpu) {
+                    HistoryStatLine(
+                        average: L("均值 %@", Format.percent(summary.average)),
+                        maximum: L("峰值 %@", Format.percent(summary.maximum))
+                    )
+                }
             }
 
             ConsoleCard(title: "进程排行", trailing: "处理器") {
@@ -1015,9 +1085,15 @@ private struct MemoryPage: View {
                 }
             }
 
-            ConsoleCard(title: "内存历史", trailing: "LIVE") {
+            ConsoleCard(title: "内存历史", trailing: model.settings.historyRange.label) {
                 AreaChart(values: model.memoryHistory, color: PulseTheme.azure, maxValue: 100)
                     .frame(height: 72)
+                if let summary = model.historySummary(\.memory) {
+                    HistoryStatLine(
+                        average: L("均值 %@", Format.percent(summary.average)),
+                        maximum: L("峰值 %@", Format.percent(summary.maximum))
+                    )
+                }
             }
 
             ConsoleCard(title: "详情") {
@@ -1111,18 +1187,39 @@ private struct NetworkPage: View {
                 )
             }
 
-            ConsoleCard(title: "带宽波形", trailing: "LIVE") {
+            ConsoleCard(title: "带宽波形", trailing: model.settings.historyRange.label) {
                 DualAreaChart(down: model.downloadHistory, up: model.uploadHistory)
                     .frame(height: 88)
                 HStack(spacing: 18) {
                     LegendItem(color: PulseTheme.azure, name: "下载", value: Format.rate(network.downRate))
                     LegendItem(color: PulseTheme.secondary, name: "上传", value: Format.rate(network.upRate))
                 }
+                if let down = model.historySummary(\.download),
+                   let up = model.historySummary(\.upload) {
+                    HistoryStatLine(
+                        average: L(
+                            "下载均速 %@ · 峰值 %@",
+                            Format.rate(down.average),
+                            Format.rate(down.maximum)
+                        ),
+                        maximum: L(
+                            "上传均速 %@ · 峰值 %@",
+                            Format.rate(up.average),
+                            Format.rate(up.maximum)
+                        )
+                    )
+                }
             }
 
             ConsoleCard(title: "连接") {
                 HStack {
                     StatColumn(label: "网卡", value: network.interfaceName)
+                    Spacer()
+                    StatColumn(
+                        label: "本机地址",
+                        value: network.addresses.first ?? "—",
+                        tint: PulseTheme.cyan
+                    )
                     Spacer()
                     StatColumn(label: "链路", value: network.isConnected ? L("已连接") : L("未连接"))
                     Spacer()
@@ -1137,6 +1234,16 @@ private struct NetworkPage: View {
                 }
             }
 
+            if !network.interfaces.isEmpty {
+                ConsoleCard(title: "活跃接口", trailing: "\(network.interfaces.count)") {
+                    VStack(spacing: 8) {
+                        ForEach(network.interfaces) { interface in
+                            NetworkInterfaceRow(interface: interface)
+                        }
+                    }
+                }
+            }
+
             ConsoleCard(title: "采样与吞吐") {
                 HStack {
                     StatColumn(label: "接收", value: Format.bytes(network.totalDown), tint: PulseTheme.azure)
@@ -1146,6 +1253,51 @@ private struct NetworkPage: View {
                     StatColumn(label: "采样", value: String(format: "%.1f ms", model.sampleTime * 1000))
                 }
             }
+        }
+    }
+}
+
+private struct NetworkInterfaceRow: View {
+    let interface: NetworkInterfaceStats
+
+    var body: some View {
+        HStack(spacing: 9) {
+            Circle()
+                .fill(interface.isConnected ? PulseTheme.cyan : PulseTheme.coral)
+                .frame(width: 5, height: 5)
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 5) {
+                    Text(interface.name)
+                        .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                        .foregroundStyle(PulseTheme.text)
+                    if interface.isPrimary {
+                        Text(L("主接口"))
+                            .font(.system(size: 7, weight: .bold, design: .rounded))
+                            .foregroundStyle(PulseTheme.azure)
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 1)
+                            .background(Capsule().fill(PulseTheme.azure.opacity(0.10)))
+                    }
+                }
+                Text(
+                    interface.addresses.isEmpty
+                        ? L("无本机地址")
+                        : interface.addresses.prefix(2).joined(separator: " · ")
+                )
+                    .font(.system(size: 8.5, weight: .medium, design: .monospaced))
+                    .foregroundStyle(PulseTheme.tertiary)
+                    .lineLimit(2)
+                    .truncationMode(.middle)
+            }
+            Spacer(minLength: 6)
+            VStack(alignment: .trailing, spacing: 2) {
+                Text("↓ \(Format.rate(interface.downRate))")
+                    .foregroundStyle(PulseTheme.azure)
+                Text("↑ \(Format.rate(interface.upRate))")
+                    .foregroundStyle(PulseTheme.secondary)
+            }
+            .font(.system(size: 8.5, weight: .medium, design: .monospaced))
+            .lineLimit(1)
         }
     }
 }
@@ -1202,9 +1354,23 @@ private struct RateTile: View {
 private struct SensorsPage: View {
     @ObservedObject var model: AppModel
     private var sensors: [SensorReading] { model.snapshot.sensors }
+    private var temperatures: [SensorReading] {
+        sensors.filter(\.isTemperature)
+    }
     private var featured: SensorReading? {
-        sensors.filter { $0.category == .cpu }.max(by: { $0.value < $1.value })
-            ?? sensors.max(by: { $0.value < $1.value })
+        temperatures.filter { $0.category == .cpu }.max(by: { $0.value < $1.value })
+            ?? temperatures.max(by: { $0.value < $1.value })
+    }
+    private var cpuTemperatures: [Double] {
+        temperatures.filter { $0.category == .cpu }.map(\.value)
+    }
+    private var gpuTemperatures: [Double] {
+        temperatures.filter { $0.category == .gpu }.map(\.value)
+    }
+    private var averageTemperature: Double? {
+        let values = temperatures.map(\.value)
+        guard !values.isEmpty else { return nil }
+        return values.reduce(0, +) / Double(values.count)
     }
 
     var body: some View {
@@ -1245,6 +1411,24 @@ private struct SensorsPage: View {
                     Spacer(minLength: 0)
                 }
                 ThermalScale(value: featured?.value ?? 0)
+                HStack {
+                    StatColumn(
+                        label: "CPU 最高",
+                        value: cpuTemperatures.max().map { String(format: "%.1f°", $0) } ?? "—",
+                        tint: PulseTheme.temperature(cpuTemperatures.max() ?? 0)
+                    )
+                    Spacer()
+                    StatColumn(
+                        label: "GPU 最高",
+                        value: gpuTemperatures.max().map { String(format: "%.1f°", $0) } ?? "—",
+                        tint: PulseTheme.temperature(gpuTemperatures.max() ?? 0)
+                    )
+                    Spacer()
+                    StatColumn(
+                        label: "全机平均",
+                        value: averageTemperature.map { String(format: "%.1f°", $0) } ?? "—"
+                    )
+                }
             }
 
             ForEach(SensorCategory.allCases, id: \.self) { category in
@@ -1364,6 +1548,24 @@ private struct SystemPage: View {
                     .font(.system(size: 8.5, weight: .medium, design: .monospaced))
                     .foregroundStyle(PulseTheme.tertiary)
                 }
+                DualAreaChart(
+                    down: model.diskReadHistory,
+                    up: model.diskWriteHistory
+                )
+                .frame(height: 52)
+                if let read = model.historySummary(\.diskRead),
+                   let write = model.historySummary(\.diskWrite) {
+                    HistoryStatLine(
+                        average: L(
+                            "读取峰值 %@",
+                            Format.rate(read.maximum)
+                        ),
+                        maximum: L(
+                            "写入峰值 %@",
+                            Format.rate(write.maximum)
+                        )
+                    )
+                }
             }
 
             ConsoleCard(title: "图形处理器", trailing: snapshot.gpu.name) {
@@ -1427,6 +1629,18 @@ private struct SystemPage: View {
                         Spacer()
                         StatColumn(label: "循环", value: "\(snapshot.battery.cycleCount)")
                         StatColumn(label: "健康度", value: snapshot.battery.health > 0 ? String(format: "%.0f%%", snapshot.battery.health) : "—")
+                    }
+                    AreaChart(
+                        values: model.batteryHistory,
+                        color: PulseTheme.azure,
+                        maxValue: 100
+                    )
+                    .frame(height: 42)
+                    if let summary = model.historySummary(\.battery) {
+                        HistoryStatLine(
+                            average: L("均值 %@", Format.percent(summary.average)),
+                            maximum: L("峰值 %@", Format.percent(summary.maximum))
+                        )
                     }
                 } else {
                     Text("无内置电池。")

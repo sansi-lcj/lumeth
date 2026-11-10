@@ -158,6 +158,20 @@ struct RingGauge: View {
 }
 
 enum ChartPath {
+    static func compact(_ values: [Double], limit: Int = 180) -> [Double] {
+        guard values.count > limit, limit > 2 else { return values }
+        let bucketSize = Double(values.count) / Double(limit)
+        return (0..<limit).map { index in
+            let start = Int((Double(index) * bucketSize).rounded(.down))
+            let end = max(
+                start + 1,
+                Int((Double(index + 1) * bucketSize).rounded(.down))
+            )
+            let slice = values[start..<min(values.count, end)]
+            return slice.reduce(0, +) / Double(slice.count)
+        }
+    }
+
     static func smooth(_ points: [CGPoint], in bounds: CGRect) -> Path {
         var path = Path()
         guard let first = points.first else { return path }
@@ -195,7 +209,8 @@ struct AreaChart: View {
         Canvas { context, size in
             guard size.width > 2, size.height > 2 else { return }
             let top = max(maxValue ?? values.max() ?? 1, 0.0001)
-            let count = max(values.count, 2)
+            let displayValues = ChartPath.compact(values)
+            let count = max(displayValues.count, 2)
             let step = size.width / CGFloat(count - 1)
 
             if showGrid {
@@ -210,7 +225,7 @@ struct AreaChart: View {
 
             let plot = CGRect(x: 0, y: 0, width: size.width, height: size.height)
             var points: [CGPoint] = []
-            for (index, value) in values.enumerated() {
+            for (index, value) in displayValues.enumerated() {
                 let x = CGFloat(index) * step
                 let normalized = min(1, max(0, value / top))
                 let y = size.height - CGFloat(normalized) * (size.height - 2) - 1

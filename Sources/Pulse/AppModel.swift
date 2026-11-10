@@ -54,6 +54,10 @@ enum DashboardTab: String, CaseIterable, Identifiable {
         case .system: return "磁盘、图形、电池与本机"
         }
     }
+
+    var supportsHistory: Bool {
+        self != .sensors
+    }
 }
 
 @MainActor
@@ -76,43 +80,85 @@ final class AppSettings: ObservableObject {
     @Published var interval: Double {
         didSet { defaults.set(interval, forKey: "interval"); onChange?() }
     }
+    @Published var historyRange: HistoryRange {
+        didSet { defaults.set(historyRange.rawValue, forKey: "historyRange") }
+    }
+    @Published var alertCPU: Bool {
+        didSet { defaults.set(alertCPU, forKey: "alertCPU") }
+    }
+    @Published var alertMemory: Bool {
+        didSet { defaults.set(alertMemory, forKey: "alertMemory") }
+    }
+    @Published var alertTemperature: Bool {
+        didSet { defaults.set(alertTemperature, forKey: "alertTemperature") }
+    }
+    @Published var alertBattery: Bool {
+        didSet { defaults.set(alertBattery, forKey: "alertBattery") }
+    }
+    @Published var cpuAlertThreshold: Int {
+        didSet { defaults.set(cpuAlertThreshold, forKey: "cpuAlertThreshold") }
+    }
+    @Published var temperatureAlertThreshold: Int {
+        didSet { defaults.set(temperatureAlertThreshold, forKey: "temperatureAlertThreshold") }
+    }
+    @Published var batteryAlertThreshold: Int {
+        didSet { defaults.set(batteryAlertThreshold, forKey: "batteryAlertThreshold") }
+    }
+    @Published var alertDuration: Double {
+        didSet { defaults.set(alertDuration, forKey: "alertDuration") }
+    }
     init() {
         defaults.register(defaults: [
             "showCPU": true,
             "showMemory": true,
             "showNetwork": true,
             "showSensors": true,
-            "interval": 1.0
+            "interval": 1.0,
+            "historyRange": HistoryRange.fiveMinutes.rawValue,
+            "alertCPU": false,
+            "alertMemory": false,
+            "alertTemperature": false,
+            "alertBattery": false,
+            "cpuAlertThreshold": 90,
+            "temperatureAlertThreshold": 95,
+            "batteryAlertThreshold": 20,
+            "alertDuration": 10.0
         ])
         showCPU = defaults.bool(forKey: "showCPU")
         showMemory = defaults.bool(forKey: "showMemory")
         showNetwork = defaults.bool(forKey: "showNetwork")
         showSensors = defaults.bool(forKey: "showSensors")
         interval = defaults.double(forKey: "interval")
+        historyRange = HistoryRange(
+            rawValue: defaults.string(forKey: "historyRange") ?? ""
+        ) ?? .fiveMinutes
+        alertCPU = defaults.bool(forKey: "alertCPU")
+        alertMemory = defaults.bool(forKey: "alertMemory")
+        alertTemperature = defaults.bool(forKey: "alertTemperature")
+        alertBattery = defaults.bool(forKey: "alertBattery")
+        cpuAlertThreshold = defaults.integer(forKey: "cpuAlertThreshold")
+        temperatureAlertThreshold = defaults.integer(forKey: "temperatureAlertThreshold")
+        batteryAlertThreshold = defaults.integer(forKey: "batteryAlertThreshold")
+        alertDuration = defaults.double(forKey: "alertDuration")
     }
 }
 
 @MainActor
 final class AppModel: ObservableObject {
     @Published private(set) var snapshot = SystemSnapshot()
-    @Published private(set) var cpuHistory: [Double] = []
-    @Published private(set) var memoryHistory: [Double] = []
-    @Published private(set) var downloadHistory: [Double] = []
-    @Published private(set) var uploadHistory: [Double] = []
-    @Published private(set) var gpuHistory: [Double] = []
-    @Published private(set) var temperatureHistory: [Double] = []
     @Published var selectedTab: DashboardTab = .overview
     @Published private(set) var tick = 0
     @Published private(set) var sampleTime = 0.0
 
     let settings = AppSettings()
+    let history = HistoryStore()
+    private let alertEngine = AlertEngine()
 
     private let sampler = SystemSampler()
     private var timer: Timer?
     private var sampling = false
     private var dashboardVisible = false
     private var cancellables: Set<AnyCancellable> = []
-    private let historyLimit = 120
 
     init() {
         settings.$interval
@@ -121,9 +167,38 @@ final class AppModel: ObservableObject {
                 Task { @MainActor in self?.restartTimer() }
             }
             .store(in: &cancellables)
+
+        history.objectWillChange
+            .sink { [weak self] _ in
+                self?.objectWillChange.send()
+            }
+            .store(in: &cancellables)
+
+        settings.objectWillChange
+            .sink { [weak self] _ in
+                self?.objectWillChange.send()
+            }
+            .store(in: &cancellables)
+
+        Publishers.CombineLatest4(
+            settings.$alertCPU,
+            settings.$alertMemory,
+            settings.$alertTemperature,
+            settings.$alertBattery
+        )
+        .dropFirst()
+        .sink { [weak self] cpu, memory, temperature, battery in
+            guard cpu || memory || temperature || battery else { return }
+            Task { @MainActor in self?.alertEngine.requestAuthorization() }
+        }
+        .store(in: &cancellables)
     }
 
     func start() {
+        if settings.alertCPU || settings.alertMemory
+            || settings.alertTemperature || settings.alertBattery {
+            alertEngine.requestAuthorization()
+        }
         sampleNow()
         restartTimer()
     }
@@ -131,6 +206,7 @@ final class AppModel: ObservableObject {
     func stop() {
         timer?.invalidate()
         timer = nil
+        history.save(force: true)
     }
 
     func setDashboardVisible(_ visible: Bool) {
@@ -177,12 +253,8 @@ final class AppModel: ObservableObject {
     private func apply(_ newSnapshot: SystemSnapshot, duration: Double) {
         snapshot = newSnapshot
         sampleTime = duration
-        append(newSnapshot.cpu.total, to: &cpuHistory)
-        append(newSnapshot.memory.usedFraction * 100, to: &memoryHistory)
-        append(newSnapshot.network.downRate, to: &downloadHistory)
-        append(newSnapshot.network.upRate, to: &uploadHistory)
-        append(newSnapshot.gpu.utilization, to: &gpuHistory)
-        append(newSnapshot.primaryTemperature ?? 0, to: &temperatureHistory)
+        history.append(newSnapshot, now: newSnapshot.date)
+        alertEngine.evaluate(snapshot: newSnapshot, settings: settings)
         tick &+= 1
         if tick == 1 {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [weak self] in
@@ -191,11 +263,23 @@ final class AppModel: ObservableObject {
         }
     }
 
-    private func append(_ value: Double, to history: inout [Double]) {
-        history.append(value.isFinite ? value : 0)
-        if history.count > historyLimit {
-            history.removeFirst(history.count - historyLimit)
-        }
+    var cpuHistory: [Double] { history.values(\.cpu, in: settings.historyRange) }
+    var memoryHistory: [Double] { history.values(\.memory, in: settings.historyRange) }
+    var downloadHistory: [Double] { history.values(\.download, in: settings.historyRange) }
+    var uploadHistory: [Double] { history.values(\.upload, in: settings.historyRange) }
+    var gpuHistory: [Double] { history.values(\.gpu, in: settings.historyRange) }
+    var temperatureHistory: [Double] { history.values(\.temperature, in: settings.historyRange) }
+    var batteryHistory: [Double] { history.values(\.battery, in: settings.historyRange) }
+    var diskReadHistory: [Double] { history.values(\.diskRead, in: settings.historyRange) }
+    var diskWriteHistory: [Double] { history.values(\.diskWrite, in: settings.historyRange) }
+    var compactCPUHistory: [Double] {
+        Array(history.values(\.cpu, in: .minute).suffix(90))
+    }
+
+    func historySummary(
+        _ keyPath: KeyPath<MetricSample, Double>
+    ) -> HistorySummary? {
+        history.summary(keyPath, in: settings.historyRange)
     }
 }
 
